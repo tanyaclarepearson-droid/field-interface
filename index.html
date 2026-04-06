@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Unified Field Interface</title>
+<style>
+:root{
+  --bg1:#120d1f; --bg2:#2a1b3f; --bg3:#5c3c74;
+  --text:#f5e9d5; --muted:#d8cab1; --gold:#efc97e; --gold2:#ffdca3;
+  --line:rgba(255,220,165,.16);
+  --shadow:0 18px 48px rgba(0,0,0,.35); --radius:22px;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; color:var(--text);
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  background:
+    radial-gradient(1100px 650px at 20% 20%, rgba(255,190,120,.09), transparent 55%),
+    radial-gradient(900px 600px at 80% 15%, rgba(200,140,255,.08), transparent 50%),
+    linear-gradient(180deg,var(--bg1),var(--bg2) 55%,var(--bg3) 100%);
+}
+body::before{
+  content:""; position:fixed; inset:0; pointer-events:none; opacity:.45;
+  background:
+    radial-gradient(circle at 10% 20%, rgba(255,255,255,.11) 0 1px, transparent 2px) 0 0/85px 85px,
+    radial-gradient(circle at 78% 17%, rgba(255,255,255,.09) 0 1px, transparent 2px) 0 0/120px 120px,
+    radial-gradient(circle at 62% 80%, rgba(255,255,255,.08) 0 1px, transparent 2px) 0 0/150px 150px;
+}
+.container{
+  display:grid;
+  grid-template-columns:82px minmax(420px, 1fr) minmax(340px, 430px);
+  min-height:100vh;
+}
+.sidebar{
+  border-right:1px solid var(--line);
+  padding:18px 10px;
+  display:flex; flex-direction:column; align-items:center; gap:10px;
+}
+.logo{
+  font:700 12px/1.2 Georgia,serif; color:var(--gold2); text-align:center;
+  margin-bottom:4px; letter-spacing:.06em;
+}
+.rung{
+  width:44px;height:44px;border-radius:50%;
+  border:1px solid rgba(255,220,165,.35);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer; color:var(--gold2);
+  background:rgba(255,255,255,.04);
+  transition:.18s ease;
+}
+.rung:hover{transform:translateY(-1px); box-shadow:0 0 16px rgba(255,220,165,.14)}
+.rung.active{
+  background:linear-gradient(180deg, rgba(255,220,165,.92), rgba(239,201,126,.92));
+  color:#20140b; font-weight:700; box-shadow:0 0 22px rgba(255,220,165,.24);
+}
+.main{
+  position:relative; padding:18px;
+  display:flex; flex-direction:column; gap:14px;
+}
+.card{
+  background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+  border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow);
+  backdrop-filter:blur(8px);
+}
+.posterCard{padding:14px; position:relative; flex:1; min-height:0;}
+.posterWrap{
+  position:relative; height:100%; min-height:420px;
+  border-radius:18px; overflow:hidden; border:1px solid rgba(255,220,165,.12);
+  background:#1a112b;
+}
+.posterWrap img{width:100%; height:100%; object-fit:contain; display:block;}
+.hotspot{
+  position:absolute; left:0; width:100%; background:transparent; border:none; cursor:pointer;
+}
+.hotspot::after{
+  content:""; position:absolute; inset:0; border-radius:10px; transition:.18s ease;
+}
+.hotspot:hover::after,.hotspot.active::after{
+  background:linear-gradient(90deg, rgba(255,220,165,.04), rgba(255,220,165,.13), rgba(255,220,165,.04));
+  box-shadow:inset 0 0 0 1px rgba(255,220,165,.18), 0 0 16px rgba(255,209,132,.12);
+}
+.controls{
+  display:flex; justify-content:space-between; align-items:center; gap:10px;
+}
+.btn{
+  border:none; border-radius:999px; padding:10px 12px; cursor:pointer;
+  background:rgba(255,255,255,.05); color:var(--text);
+  border:1px solid var(--line); font:600 14px/1 system-ui,-apple-system,Segoe UI,sans-serif;
+}
+.btn.primary{background:linear-gradient(180deg, rgba(255,215,145,.18), rgba(255,215,145,.08));}
+.legend{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px;}
+.legend button.active{background:rgba(255,220,165,.12)}
+.panel{padding:18px; overflow:auto; border-left:1px solid var(--line);}
+.eyebrow{
+  color:#efcf95; font:700 12px/1 system-ui,-apple-system,Segoe UI,sans-serif;
+  letter-spacing:.14em; text-transform:uppercase; margin-bottom:10px;
+}
+.panel h2{margin:0 0 8px; color:#fff1d2; font:700 clamp(24px,2.8vw,38px)/1.1 Georgia,serif;}
+.sub{margin:0 0 12px; color:var(--muted); font-size:18px; font-style:italic;}
+.desc{margin:0 0 16px; color:#f2e4cb; font-size:16px; line-height:1.55;}
+.facts{display:grid; gap:10px; margin-bottom:16px;}
+.fact{padding:12px 13px; border-radius:16px; border:1px solid var(--line); background:rgba(255,255,255,.04);}
+.fact strong{display:block; color:#ffe7b8; margin-bottom:4px; font-size:15px;}
+.fact span{color:#efe0c5; font-size:14px; line-height:1.45;}
+.chips{display:flex; flex-wrap:wrap; gap:10px; margin-bottom:14px;}
+.chip{
+  padding:9px 12px; border-radius:999px; border:1px solid var(--line); background:rgba(255,255,255,.05);
+  color:#fff2d5; font:600 13px/1 system-ui,-apple-system,Segoe UI,sans-serif;
+}
+.expandCard{margin-top:14px; border-top:1px solid var(--line); padding-top:14px;}
+.expandHead{display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:10px;}
+.expandHead h3{margin:0; color:#fff1d2; font:700 20px/1.1 Georgia,serif;}
+.expandBody{display:none; gap:10px;}
+.expandBody.open{display:grid;}
+.artifact{padding:12px 13px; border-radius:16px; border:1px solid var(--line); background:rgba(255,255,255,.04);}
+.artifact strong{display:block; color:#ffe7b8; margin-bottom:4px;}
+.artifact span{display:block; color:#efe0c5; font-size:14px; line-height:1.45;}
+.note{margin-top:14px; padding-top:14px; border-top:1px solid var(--line); color:var(--muted); font-style:italic; font-size:14px;}
+@media (max-width:1100px){
+  .container{grid-template-columns:70px 1fr}
+  .panel{grid-column:1 / -1; border-left:none; border-top:1px solid var(--line);}
+}
+@media (max-width:760px){
+  .legend{grid-template-columns:repeat(2,minmax(0,1fr));}
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <aside class="sidebar">
+    <div class="logo">UFHD<br/>V3</div>
+    <button class="rung" data-key="7">7</button>
+    <button class="rung" data-key="6">6</button>
+    <button class="rung" data-key="5">5</button>
+    <button class="rung" data-key="4">4</button>
+    <button class="rung" data-key="3">3</button>
+    <button class="rung" data-key="2">2</button>
+    <button class="rung" data-key="1">1</button>
+  </aside>
+  <main class="main">
+    <div class="card posterCard">
+      <div class="posterWrap">
+        <img src="unified_field_v2_poster.jpeg" alt="Unified Field poster">
+        <button class="hotspot" data-key="overview" style="top:0%;height:20%"></button>
+        <button class="hotspot" data-key="7" style="top:22%;height:8%"></button>
+        <button class="hotspot" data-key="6" style="top:30%;height:8%"></button>
+        <button class="hotspot" data-key="5" style="top:38%;height:8%"></button>
+        <button class="hotspot" data-key="4" style="top:46%;height:8%"></button>
+        <button class="hotspot" data-key="3" style="top:54%;height:8%"></button>
+        <button class="hotspot" data-key="2" style="top:62%;height:8%"></button>
+        <button class="hotspot" data-key="1" style="top:70%;height:7%"></button>
+        <button class="hotspot" data-key="truth" style="top:77%;height:7%"></button>
+        <button class="hotspot" data-key="constant" style="top:84%;height:7.5%"></button>
+        <button class="hotspot" data-key="closing" style="top:91%;height:8%"></button>
+      </div>
+    </div>
+    <div class="controls">
+      <button class="btn" id="upBtn">⬆ More abstract</button>
+      <div class="legend" id="legend"></div>
+      <button class="btn" id="downBtn">⬇ More felt</button>
+    </div>
+  </main>
+  <aside class="card panel">
+    <div class="eyebrow" id="eyebrow">Overview</div>
+    <h2 id="title">The Unified Field of Human Development</h2>
+    <p class="sub" id="subtitle">A ladder of entry into coherence.</p>
+    <p class="desc" id="desc">Use this as a live navigation spine for your artifacts, writing, visuals, and tools.</p>
+    <div class="facts" id="facts"></div>
+    <div class="chips" id="chips"></div>
+    <div class="expandCard">
+      <div class="expandHead">
+        <h3>Explore more</h3>
+        <button class="btn primary" id="toggleBtn">Open</button>
+      </div>
+      <div class="expandBody" id="expandBody"></div>
+    </div>
+    <div class="note" id="note">This version adds a drill-down layer so each rung can hold more than one artifact without becoming dense.</div>
+  </aside>
+</div>
+<script>
+const order = ["7","6","5","4","3","2","1"];
+const labels = {overview:"Overview","7":"7","6":"6","5":"5","4":"4","3":"3","2":"2","1":"1",truth:"Simple Truth",constant:"Constants",closing:"Closing"};
+const data = {
+  overview:{eyebrow:"Overview",title:"The Unified Field of Human Development",subtitle:"A ladder of entry into coherence.",desc:"Use this as a live navigation spine for your artifacts, writing, visuals, and tools. Each level can hold one clear anchor plus a few optional expansions.",facts:[["Use now","A digital navigation spine for your existing work."],["Best next step","Plug one representative anchor artifact into each level first."],["Design rule","Default simple. Depth optional."]],chips:["Poster","Interface","Spine"],note:"This version adds a drill-down layer so each rung can hold more than one artifact without becoming dense.",artifacts:[["Start sparse","One anchor artifact per rung is enough to make the system feel complete."],["Expand gradually","Add 2–4 deeper items only where the rung naturally wants more."],["Preserve entry","Do not overload the lower levels — they work because they stay light."]]},
+  "7":{eyebrow:"Level 7",title:"Theoretical",subtitle:"Generative principles & foundational laws",desc:"The broadest articulation of what is universally true about human development.",facts:[["Holds","Core law statements and foundational claims."],["Useful for","White paper framing, research introductions, policy orientation."],["Anchor artifact","Your strongest law statement."]],chips:["Theory","Law statements","White paper"],note:"This is the highest abstraction layer, but it does not need to be the first entry point.",artifacts:[["Law statement","“I am not asking people to believe in a theory. I am helping systems align with how development already works.”"],["Ethical anchor","“Once developmental lawfulness is visible, neutrality is no longer neutral.”"],["Possible add-on","Tiered theory summary or white paper opening page."]]},
+  "6":{eyebrow:"Level 6",title:"Scientific",subtitle:"Mathematics, equations, and formal modeling",desc:"This level opens the formal model of coherence. Tap to enter.",link:"coherence_model_v3.html",facts:[["Holds","Equations, notation, thresholds, simulations."],["Useful for","Methods sections, technical slides, scientific bridge-building."],["Anchor artifact","Your canonical equation block."]],chips:["Equations","Thresholds","Methods"],note:"This is where the framework becomes formally legible.",artifacts:[["Equation","S = F₀ · Fq · Ff"],["Support line","Stability is not additive. It is multiplicative."],["Portal","Tap Level 6 to open the 3F model."]]},
+  "5":{eyebrow:"Level 5",title:"Systems",subtitle:"Design, conditions, and applied architecture",desc:"This is where the work becomes visible in interacting systems. Tap to enter.",link:"systems.html",facts:[["Holds","System dynamics, transmissible stability, patterned interaction."],["Useful for","Showing what coherence looks like once it begins to organize a field."],["Anchor artifact","Co-regulation image with resolution toggle."]],chips:["Systems","Field effects","Resolution"],note:"This layer is where the model becomes observable reality.",artifacts:[["Anchor image","One regulated system organizes the surrounding systems."],["Portal","Tap Level 5 to open the image page with resolution toggle."],["Future path","This page can later link upward to science and downward to felt practice."]]},
+  "4":{eyebrow:"Level 4",title:"Concept",subtitle:"Instruction, relationships, and intentional design",desc:"This layer turns the framework into practice: teaching moves, facilitation choices, leadership structures, and designed conditions.",facts:[["Holds","Applications for classrooms, teams, leadership, and interaction design."],["Useful for","Professional learning, school design, facilitation, planning."],["Anchor artifact","One real classroom or leadership move."]],chips:["Concept","Practice","Design"],note:"This is where the framework becomes directly usable.",artifacts:[["Classroom move","“We are learning how to do this.”"],["Leadership move","Music + breathing + shared attention in assemblies."],["Possible add-on","Sentence frames, design principles, teacher guidance."]]},
+  "3":{eyebrow:"Level 3",title:"Narrative",subtitle:"Language, story, and human meaning-making",desc:"This level translates structure into story and phrasing people can follow and inhabit.",facts:[["Holds","Explainers, framing language, poetic lines, guided reflection."],["Useful for","Talks, books, public writing, onboarding, story entry."],["Anchor artifact","One paragraph, not many."]],chips:["Narrative","Story","Language"],note:"This level often becomes the bridge between feeling and concept.",artifacts:[["Anchor paragraph","“Humans grow by reorganizing the past through the lens of the present in service of the future.”"],["Arc language","Development is not linear. It is a return with new coherence."],["Possible add-on","Phoenix Arc overview, orientation page, summary text."]]},
+  "2":{eyebrow:"Level 2",title:"Image / Feeling",subtitle:"Metaphor, atmosphere, and resonance",desc:"Recognition comes before explanation. This level lets people sense the field before they have the words for it.",facts:[["Holds","Images, pairings, music, phrases, cinematic fragments."],["Useful for","Projection, talks, openings, classrooms, visual sequences."],["Anchor artifact","One page, one image, one lyric, one spread."]],chips:["Image","Feeling","Atmosphere"],note:"This is one of your strongest and most magnetic entry levels.",artifacts:[["Mariposa","One luminous page only, not the full book."],["Song","One clip or one lyric fragment."],["Coffee table book","One spread only, not the full artifact."]]},
+  "1":{eyebrow:"Level 1",title:"Image",subtitle:"Perception, color, and shared attention",desc:"The most immediate entry point. The field is felt directly here, often before interpretation begins.",facts:[["Holds","Single images, visual icons, color fields, quiet anchors."],["Useful for","Shared attention, regulation, covers, portals, still points."],["Anchor artifact","A single still image."]],chips:["Perception","Color","Shared attention"],note:"This is where entry becomes immediate and collective.",artifacts:[["Field image","Meadow / sky / light image without text."],["Classroom use","Project silently. Let the room enter it first."],["Possible add-on","Children image or shared gaze visual."]]},
+  truth:{eyebrow:"Bridge",title:"A Simple Truth",subtitle:"People do not need to understand the system in order to enter it.",desc:"This line protects access. It keeps the framework invitational without diluting its depth.",facts:[["Function","Bridges the ladder and the landing."],["Useful for","Orientation pages, talks, opening slides, platform welcome text."],["Anchor artifact","This line itself."]],chips:["Bridge","Orientation","Welcome"],note:"This is a strong opening or transition line anywhere in the broader project.",artifacts:[["Use as","Poster bridge, website entry, talk opener."],["Works because","It lowers pressure without lowering seriousness."],["Possible add-on","A paired image or soft audio bed."]]},
+  constant:{eyebrow:"Grounding layer",title:"What Remains Constant",subtitle:"The stable logic beneath the entries",desc:"This section is not a recap. It is the lawful sequence that remains true across all entry points.",facts:[["Constant 1","Coherence organizes development."],["Constant 2","Conditions shape what becomes possible."],["Constant 3","What is felt can become known. What is known can become lived."]],chips:["Constants","Lawful sequence","Grounding"],note:"This is your landing field — the part that remains after the image fades.",artifacts:[["Use as","Closing anchor in slides, posters, book sections, or website footers."],["Visual pairing","Soft field image or darker grounding gradient."],["Possible add-on","Animated reveal in presentation form."]]},
+  closing:{eyebrow:"Closing",title:"The field is one. The entries are many.",subtitle:"A quiet ending that remains open.",desc:"This closing line releases the viewer without collapsing the complexity. It feels complete while keeping the field alive.",facts:[["Effect","Echo instead of conclusion."],["Useful for","Poster endings, talk endings, book spreads, film openings or closings."],["Anchor artifact","The closing line itself."]],chips:["Closing","Echo","Release"],note:"This line works because it resolves without reducing.",artifacts:[["Use as","Poster ending, final slide, website footer, opening film frame."],["Quality","Quiet, authoritative, spacious."],["Possible add-on","Slow fade, glow pulse, or ambient audio exit."]]}
+};
+
+let current = "2";
+const titleEl = document.getElementById("title");
+const subtitleEl = document.getElementById("subtitle");
+const descEl = document.getElementById("desc");
+const eyebrowEl = document.getElementById("eyebrow");
+const factsEl = document.getElementById("facts");
+const chipsEl = document.getElementById("chips");
+const noteEl = document.getElementById("note");
+const expandBody = document.getElementById("expandBody");
+const toggleBtn = document.getElementById("toggleBtn");
+let open = false;
+
+function render(key){
+  current = key;
+  const item = data[key];
+  if (item.link){ window.location.href = item.link; return; }
+  eyebrowEl.textContent = item.eyebrow;
+  titleEl.textContent = item.title;
+  subtitleEl.textContent = item.subtitle;
+  descEl.textContent = item.desc;
+  factsEl.innerHTML = "";
+  item.facts.forEach(([k,v]) => {
+    const d = document.createElement("div");
+    d.className = "fact";
+    d.innerHTML = `<strong>${k}</strong><span>${v}</span>`;
+    factsEl.appendChild(d);
+  });
+  chipsEl.innerHTML = "";
+  item.chips.forEach(c => {
+    const s = document.createElement("span");
+    s.className = "chip";
+    s.textContent = c;
+    chipsEl.appendChild(s);
+  });
+  expandBody.innerHTML = "";
+  item.artifacts.forEach(([k,v]) => {
+    const a = document.createElement("div");
+    a.className = "artifact";
+    a.innerHTML = `<strong>${k}</strong><span>${v}</span>`;
+    expandBody.appendChild(a);
+  });
+  noteEl.textContent = item.note;
+  document.querySelectorAll(".rung").forEach(r => r.classList.toggle("active", r.dataset.key === key));
+  document.querySelectorAll(".hotspot").forEach(r => r.classList.toggle("active", r.dataset.key === key));
+  document.querySelectorAll(".legend button").forEach(b => b.classList.toggle("active", b.dataset.key === key));
+}
+function move(delta){
+  const i = order.indexOf(current);
+  if (i === -1) return;
+  const next = order[i + delta];
+  if (next) render(next);
+}
+document.getElementById("upBtn").onclick = () => {
+  if (current === "overview" || current === "truth" || current === "constant" || current === "closing") return;
+  move(-1);
+};
+document.getElementById("downBtn").onclick = () => {
+  if (current === "overview" || current === "truth" || current === "constant" || current === "closing") return;
+  move(1);
+};
+toggleBtn.onclick = () => {
+  open = !open;
+  expandBody.classList.toggle("open", open);
+  toggleBtn.textContent = open ? "Close" : "Open";
+};
+document.querySelectorAll(".rung").forEach(b => b.onclick = () => render(b.dataset.key));
+document.querySelectorAll(".hotspot").forEach(b => b.onclick = () => render(b.dataset.key));
+const legend = document.getElementById("legend");
+["overview","7","6","5","4","3","2","1","truth","constant","closing"].forEach(k => {
+  const b = document.createElement("button");
+  b.className = "btn";
+  b.dataset.key = k;
+  b.textContent = labels[k];
+  b.onclick = () => render(k);
+  legend.appendChild(b);
+});
+render("2");
+</script>
+</body>
+</html>

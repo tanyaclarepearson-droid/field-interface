@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Coherence Model V3</title>
+<style>
+  :root{
+    --bg1:#120d1f;
+    --bg2:#2a1b3f;
+    --bg3:#5c3c74;
+    --text:#f4e9d8;
+    --muted:#d8cab1;
+    --gold:#efc97e;
+    --line:rgba(255,220,165,.18);
+    --shadow:0 18px 48px rgba(0,0,0,.35);
+    --radius:22px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family:Georgia, "Times New Roman", serif;
+    color:var(--text);
+    background:
+      radial-gradient(1100px 650px at 20% 20%, rgba(255,190,120,.09), transparent 55%),
+      radial-gradient(900px 600px at 80% 15%, rgba(200,140,255,.08), transparent 50%),
+      linear-gradient(180deg,var(--bg1),var(--bg2) 55%,var(--bg3) 100%);
+  }
+  body::before{
+    content:"";
+    position:fixed; inset:0; pointer-events:none; opacity:.45;
+    background:
+      radial-gradient(circle at 10% 20%, rgba(255,255,255,.11) 0 1px, transparent 2px) 0 0/85px 85px,
+      radial-gradient(circle at 78% 17%, rgba(255,255,255,.09) 0 1px, transparent 2px) 0 0/120px 120px,
+      radial-gradient(circle at 62% 80%, rgba(255,255,255,.08) 0 1px, transparent 2px) 0 0/150px 150px;
+  }
+  .wrap{max-width:1300px; margin:0 auto; padding:22px;}
+  .topbar{display:flex; align-items:center; gap:12px; margin-bottom:12px;}
+  .backBtn{
+    display:inline-flex; align-items:center; gap:8px; padding:10px 14px; border-radius:999px;
+    border:1px solid var(--line); background:linear-gradient(180deg, rgba(255,215,145,.18), rgba(255,215,145,.08));
+    color:var(--text); text-decoration:none; font:600 14px/1 system-ui,-apple-system,Segoe UI,sans-serif;
+    box-shadow:0 8px 22px rgba(0,0,0,.16);
+  }
+  .hero{text-align:center; margin-bottom:16px;}
+  .hero h1{margin:0 0 8px; font-size:clamp(30px,4vw,54px); color:#fff1d2; font-weight:400;}
+  .hero p{margin:0; color:var(--muted); font-size:clamp(16px,2vw,22px); font-style:italic;}
+  .layout{display:grid; grid-template-columns:minmax(420px, 1fr) minmax(320px, 430px); gap:18px; align-items:start;}
+  .card{
+    background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+    border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); backdrop-filter:blur(8px);
+  }
+  .mainCard{padding:20px;}
+  .nodes{display:flex; gap:22px; flex-wrap:wrap; justify-content:center; margin-bottom:20px;}
+  .node{
+    width:148px; height:148px; border-radius:50%; display:flex; align-items:center; justify-content:center; text-align:center;
+    cursor:pointer; transition:.28s ease; box-shadow:0 0 20px rgba(255,255,255,.08); animation:pulse 6s infinite ease-in-out;
+    border:1px solid rgba(255,255,255,.08); color:#fff6e6; padding:10px;
+  }
+  .node:hover{transform:scale(1.06); box-shadow:0 0 34px rgba(255,255,255,.22);}
+  .node.active{outline:2px solid rgba(255,220,165,.45); box-shadow:0 0 36px rgba(255,220,165,.18);}
+  .form{background:radial-gradient(circle,#e6c16a,#c79a3a)}
+  .freq{background:radial-gradient(circle,#7bc1b5,#4e9488)}
+  .fidelity{background:radial-gradient(circle,#8bb3d9,#5a88b3)}
+  @keyframes pulse{0%,100%{box-shadow:0 0 18px rgba(255,255,255,.05)}50%{box-shadow:0 0 36px rgba(255,255,255,.16)}}
+  .modelGrid{display:grid; grid-template-columns:1.1fr .9fr; gap:16px;}
+  .subcard{background:rgba(255,255,255,.04); border:1px solid var(--line); border-radius:18px; padding:16px;}
+  .subcard h2,.panel h2{margin:0 0 8px; color:#fff1d2; font-weight:400; font-size:clamp(24px,3vw,38px);}
+  .sub{margin:0 0 14px; color:var(--muted); font-size:18px; font-style:italic;}
+  .desc{margin:0 0 14px; color:#f1e4ce; font:400 16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;}
+  .slider-group label{display:block; color:#f1e4ce; margin:10px 0 5px; font:600 14px/1 system-ui,-apple-system,Segoe UI,sans-serif;}
+  input[type=range]{width:100%}
+  .equation{color:#f3e3c4; opacity:.9; margin:10px 0 6px; font-size:18px; text-align:center;}
+  .stability{font-size:2.2em; color:#ffd98a; text-align:center; transition:.3s;}
+  .threshold{
+    margin:18px auto 0; width:120px; height:120px; border-radius:50%; border:2px solid rgba(255,255,255,.15);
+    display:flex; align-items:center; justify-content:center; transition:.4s ease;
+  }
+  .threshold.active{border-color:#ffd98a; box-shadow:0 0 30px rgba(255,217,138,.5);}
+  .collapse{opacity:.5; transform:scale(.95);}
+  .artifactHead{display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 0 10px;}
+  .artifactHead h3{margin:0; color:#fff1d2; font-weight:400; font-size:22px;}
+  .btn{
+    border:none; border-radius:999px; padding:10px 12px; cursor:pointer;
+    background:rgba(255,255,255,.05); color:var(--text); border:1px solid var(--line);
+    font:600 14px/1 system-ui,-apple-system,Segoe UI,sans-serif;
+  }
+  .btn.primary{background:linear-gradient(180deg, rgba(255,215,145,.18), rgba(255,215,145,.08));}
+  .artifactBody{display:none; gap:10px;}
+  .artifactBody.open{display:grid;}
+  .artifact{
+    padding:12px 13px; border-radius:16px; border:1px solid var(--line);
+    background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.035));
+    box-shadow:0 1px 0 rgba(255,255,255,.03) inset, 0 8px 22px rgba(0,0,0,.10);
+  }
+  .artifact strong{display:block; color:#ffe7b8; margin-bottom:4px; font-size:15px;}
+  .artifact span{display:block; color:#efe0c5; font:400 14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;}
+  .artifactImageWrap{
+    position:relative; margin-top:10px; border-radius:16px; overflow:hidden;
+    border:1px solid rgba(255,220,165,.14); background:rgba(255,255,255,.03);
+    box-shadow:0 0 0 1px rgba(255,220,165,.04) inset, 0 14px 34px rgba(0,0,0,.22), 0 0 28px rgba(255,220,165,.08);
+  }
+  .artifactImageWrap::before{
+    content:""; position:absolute; inset:0; pointer-events:none;
+    background:radial-gradient(circle at 50% 0%, rgba(255,245,220,.10), transparent 38%),
+               linear-gradient(180deg, rgba(255,255,255,.04), transparent 22%, transparent 78%, rgba(255,220,165,.04));
+    z-index:2;
+  }
+  .artifactImage{display:block; width:100%; height:auto; opacity:0; transform:scale(0.985); transition:opacity .45s ease, transform .55s ease;}
+  .artifactImage.is-visible{opacity:1; transform:scale(1);}
+  .artifactCaption{margin-top:10px; color:#efe0c5; font:400 14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;}
+  .artifactGlow{
+    position:absolute; inset:auto 10% -8% 10%; height:26%; pointer-events:none;
+    background:radial-gradient(ellipse at center, rgba(255,220,165,.20), transparent 70%); filter:blur(18px); z-index:1;
+  }
+  .artifactFrameLabel{
+    display:inline-block; margin-top:8px; padding:6px 10px; border-radius:999px;
+    border:1px solid rgba(255,220,165,.14); background:rgba(255,255,255,.04); color:#fff2d5;
+    font:600 12px/1 system-ui,-apple-system,Segoe UI,sans-serif; letter-spacing:.02em;
+  }
+  .panel{padding:18px; position:sticky; top:18px;}
+  .eyebrow{color:#efcf95; font:700 12px/1 system-ui,-apple-system,Segoe UI,sans-serif; letter-spacing:.14em; text-transform:uppercase; margin-bottom:10px;}
+  .facts{display:grid; gap:10px; margin-bottom:14px;}
+  .fact{padding:12px 13px; border-radius:16px; border:1px solid var(--line); background:rgba(255,255,255,.04);}
+  .fact strong{display:block; color:#ffe7b8; margin-bottom:4px; font-size:15px;}
+  .fact span{display:block; color:#efe0c5; font:400 14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;}
+  .chips{display:flex; flex-wrap:wrap; gap:10px; margin-bottom:14px;}
+  .chip{padding:9px 12px; border-radius:999px; border:1px solid var(--line); background:rgba(255,255,255,.05); color:#fff2d5; font:600 13px/1 system-ui,-apple-system,Segoe UI,sans-serif;}
+  .note{margin-top:14px; padding-top:14px; border-top:1px solid var(--line); color:var(--muted); font-style:italic; font-size:14px;}
+  @media (max-width:980px){.layout{grid-template-columns:1fr}.panel{position:relative; top:auto;}.modelGrid{grid-template-columns:1fr}.topbar{flex-direction:column; align-items:flex-start;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <a class="backBtn" href="index.html">← Back to Ladder</a>
+  </div>
+  <div class="hero">
+    <h1>Coherence Model V3</h1>
+    <p>Tap a condition, test the model, and open anchor artifacts for each factor.</p>
+  </div>
+
+  <div class="layout">
+    <section class="card mainCard">
+      <div class="nodes">
+        <div class="node form active" data-key="form">Form<br>(F₀)</div>
+        <div class="node freq" data-key="freq">Frequency<br>(Fq)</div>
+        <div class="node fidelity" data-key="fidelity">Fidelity<br>(Ff)</div>
+      </div>
+      <div class="modelGrid">
+        <div class="subcard">
+          <h2 id="modelTitle">Form</h2>
+          <p class="sub" id="modelSubtitle">Structure & design</p>
+          <p class="desc" id="modelDesc">Form is the container. It gives experience a coherent shape that can be returned to. Without form, coherence has nowhere to gather.</p>
+          <div class="slider-group">
+            <label>Form (F₀)</label><input type="range" min="0" max="1" step="0.01" value="0.8" id="f0">
+            <label>Frequency (Fq)</label><input type="range" min="0" max="1" step="0.01" value="0.8" id="fq">
+            <label>Fidelity (Ff)</label><input type="range" min="0" max="1" step="0.01" value="0.8" id="ff">
+          </div>
+          <div class="equation">F₀ · Fq · Ff → S*</div>
+          <div class="stability" id="output">0.51</div>
+          <div class="threshold" id="threshold">S*</div>
+        </div>
+        <div class="subcard">
+          <div class="artifactHead">
+            <h3>Explore more</h3>
+            <button class="btn primary" id="toggleBtn">Open</button>
+          </div>
+          <div class="artifactBody" id="artifactBody"></div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="card panel">
+      <div class="eyebrow" id="eyebrow">Condition</div>
+      <h2 id="panelTitle">Form</h2>
+      <p class="sub" id="panelSubtitle">Structure & design</p>
+      <p class="desc" id="panelDesc">Form is the container. It gives experience a coherent shape that can be returned to. Without form, coherence has nowhere to gather.</p>
+      <div class="facts" id="facts"></div>
+      <div class="chips" id="chips"></div>
+      <div class="note" id="note">This is where coherence becomes visible. Strong form stabilizes before interpretation begins.</div>
+    </aside>
+  </div>
+</div>
+
+<script>
+const content = {
+  form: {
+    eyebrow:"Condition",
+    title:"Form",
+    subtitle:"Structure & design",
+    desc:"Form is the container. It gives experience a coherent shape that can be returned to. Without form, coherence has nowhere to gather.",
+    facts:[
+      ["Role","Provides structure, rhythm, and architecture."],
+      ["What it shapes","Routines, launches, transitions, visual design, and held space."],
+      ["Anchor artifact","Coherent Learning Environments model."]
+    ],
+    chips:["Structure","Container","Design"],
+    note:"This is where coherence becomes visible. Strong form stabilizes before interpretation begins.",
+    artifacts:[
+      ["Anchor artifact","Coherent Learning Environments (conditions-based classroom design model)"],
+      ["Core insight","Coherence is built by shaping conditions across domains, not by managing outcomes."],
+      ["Application","Regulate, Create Structures, Shape Signals, Use Language, Cultivate Belonging, Sustain Coherent Attention — designed intentionally."],
+      ["Visual reference",{
+        type:"image",
+        src:"coherent_learning_environments_latest.jpeg",
+        alt:"Coherent Learning Environments diagram",
+        label:"Embedded artifact",
+        caption:"This figure shows how coherence becomes visible when conditions are intentionally aligned across domains."
+      }]
+    ]
+  },
+  freq: {
+    eyebrow:"Condition",
+    title:"Frequency",
+    subtitle:"Patterned repetition + emotional valence",
+    desc:"Frequency is how often coherence returns — and how it feels when it does. Repetition without resonance is not enough.",
+    facts:[
+      ["Role","Builds pattern over time."],
+      ["What it shapes","Repetition, predictability, return, emotional memory."],
+      ["Anchor artifact","Songs, recurring images, repeated field moments."]
+    ],
+    chips:["Repetition","Rhythm","Valence"],
+    note:"Frequency is where return becomes stabilizing rather than merely repeated.",
+    artifacts:[
+      ["Anchor artifact","Mariposa songs / repeated song fragments."],
+      ["Field practice","Returning to an image or ritual across time."],
+      ["Possible add-on","Daily or weekly repeated coherence cues."]
+    ]
+  },
+  fidelity: {
+    eyebrow:"Condition",
+    title:"Fidelity",
+    subtitle:"Quality of enactment",
+    desc:"Fidelity is how well the condition is carried. It includes precision, consistency, tone, and relational integrity in the moment of enactment.",
+    facts:[
+      ["Role","Determines the quality of how the pattern is lived."],
+      ["What it shapes","Presence, consistency, accuracy, tone, relational trust."],
+      ["Anchor artifact","Facilitation guidance and enacted examples."]
+    ],
+    chips:["Quality","Presence","Integrity"],
+    note:"Fidelity is not rigidity. It is the quality of alignment in how something is carried out.",
+    artifacts:[
+      ["Anchor artifact","Facilitator guidance: hold, don’t force."],
+      ["Classroom example","Music and field-setting carried with calm-bright presence."],
+      ["Possible add-on","Examples of high vs low fidelity enactment."]
+    ]
+  }
+};
+
+let expanded = false;
+const nodes = document.querySelectorAll(".node");
+const modelTitle = document.getElementById("modelTitle");
+const modelSubtitle = document.getElementById("modelSubtitle");
+const modelDesc = document.getElementById("modelDesc");
+const eyebrow = document.getElementById("eyebrow");
+const panelTitle = document.getElementById("panelTitle");
+const panelSubtitle = document.getElementById("panelSubtitle");
+const panelDesc = document.getElementById("panelDesc");
+const factsEl = document.getElementById("facts");
+const chipsEl = document.getElementById("chips");
+const noteEl = document.getElementById("note");
+const artifactBody = document.getElementById("artifactBody");
+const toggleBtn = document.getElementById("toggleBtn");
+
+function render(key){
+  const item = content[key];
+  modelTitle.textContent = item.title;
+  modelSubtitle.textContent = item.subtitle;
+  modelDesc.textContent = item.desc;
+  eyebrow.textContent = item.eyebrow;
+  panelTitle.textContent = item.title;
+  panelSubtitle.textContent = item.subtitle;
+  panelDesc.textContent = item.desc;
+  noteEl.textContent = item.note;
+
+  factsEl.innerHTML = "";
+  item.facts.forEach(([k,v]) => {
+    const d = document.createElement("div");
+    d.className = "fact";
+    d.innerHTML = `<strong>${k}</strong><span>${v}</span>`;
+    factsEl.appendChild(d);
+  });
+
+  chipsEl.innerHTML = "";
+  item.chips.forEach(c => {
+    const s = document.createElement("span");
+    s.className = "chip";
+    s.textContent = c;
+    chipsEl.appendChild(s);
+  });
+
+  artifactBody.innerHTML = "";
+  item.artifacts.forEach(([k,v]) => {
+    const d = document.createElement("div");
+    d.className = "artifact";
+    if(typeof v === "object" && v.type === "image"){
+      d.innerHTML = `
+        <strong>${k}</strong>
+        <div class="artifactFrameLabel">${v.label || "Embedded artifact"}</div>
+        <div class="artifactImageWrap">
+          <div class="artifactGlow"></div>
+          <img class="artifactImage" src="${v.src}" alt="${v.alt || k}">
+        </div>
+        ${v.caption ? `<div class="artifactCaption">${v.caption}</div>` : ""}
+      `;
+      const img = d.querySelector(".artifactImage");
+      img.addEventListener("load", () => requestAnimationFrame(()=>img.classList.add("is-visible")));
+    } else {
+      d.innerHTML = `<strong>${k}</strong><span>${v}</span>`;
+    }
+    artifactBody.appendChild(d);
+  });
+
+  nodes.forEach(n => n.classList.toggle("active", n.dataset.key === key));
+}
+
+function calc(){
+  const f0 = parseFloat(document.getElementById("f0").value);
+  const fq = parseFloat(document.getElementById("fq").value);
+  const ff = parseFloat(document.getElementById("ff").value);
+  const result = f0 * fq * ff;
+  const output = document.getElementById("output");
+  const threshold = document.getElementById("threshold");
+  output.textContent = result.toFixed(2);
+  if(result > 0.5){ threshold.classList.add("active"); }
+  else { threshold.classList.remove("active"); }
+  if(f0 < 0.2 || fq < 0.2 || ff < 0.2){ output.classList.add("collapse"); }
+  else { output.classList.remove("collapse"); }
+}
+
+nodes.forEach(n => n.addEventListener("click", () => render(n.dataset.key)));
+document.getElementById("f0").addEventListener("input", calc);
+document.getElementById("fq").addEventListener("input", calc);
+document.getElementById("ff").addEventListener("input", calc);
+toggleBtn.addEventListener("click", () => {
+  expanded = !expanded;
+  artifactBody.classList.toggle("open", expanded);
+  toggleBtn.textContent = expanded ? "Close" : "Open";
+});
+
+render("form");
+calc();
+</script>
+</body>
+</html>
